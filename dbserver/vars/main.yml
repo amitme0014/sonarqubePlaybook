@@ -1,0 +1,7 @@
+---
+# vars file for dbserver
+
+mysql_user_sonar: sonar
+mysql_user_password: sonar
+
+mysql_db_name: SONARDB

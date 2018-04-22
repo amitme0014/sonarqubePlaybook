@@ -1,0 +1,66 @@
+---
+
+#- name: Installing wget
+#  yum:
+#    name: wget
+#    state: latest
+
+
+- name: Download yum repo package of MySQL Server 5.6
+  get_url:
+    url: http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
+    dest: /var
+    mode: 0440
+
+- name: Install 'mysql-community-release-el7-5.noarch.rpm' package.
+  yum:
+     name: /var/mysql-community-release-el7-5.noarch.rpm
+     state: present
+
+- name: Install MySQL Server
+  yum:
+    name: "{{ item }}" 
+    state: present
+  with_items: 
+    - mysql-community-server
+    - mysql-community-client
+    - MySQL-python
+
+- name: Start service mysqld, if not running
+  service:
+    name: mysqld
+    state: started
+
+- name: Enable services for automatic start
+  service:
+    name: mysqld
+    enabled: yes
+
+- name: Create a new database with name sonar
+  mysql_db:
+    name: "{{mysql_db_name}}"
+    state: present
+    encoding: utf8
+    login_user: "{{mysql_user_sonar}}"
+    login_password: "{{mysql_user_password}}"
+
+
+- mysql_user:
+    name: "{{mysql_user_sonar}}"
+    password: "{{mysql_user_password}}"
+    priv: 'SONARDB.*:ALL'
+    state: present 
+    host: 54.69.208.86
+
+# name: Create a new database with name sonar
+# mysql_db:
+#   name: "{{mysql_db_name}}"
+#   state: present
+#   encoding: utf8
+#   login_user: "{{mysql_user_sonar}}"
+#   login_password: "{{mysql_user_password}}"
+
+- name: Restart service mysqld
+  service:
+    name: mysqld
+    state: restarted

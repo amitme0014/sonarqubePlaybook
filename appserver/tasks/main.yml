@@ -1,0 +1,65 @@
+---
+# tasks file for appserver
+
+- name: upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
+- name: remove the java-1.7.0 package
+  yum:
+    name: java-1.7.0-openjdk
+    state: absent
+
+
+- name: Installing the java-1.8.0-openjdk package
+  yum:
+    name: java-1.8.0-openjdk-devel
+    state: present
+
+- name: Download Sonarqube repo
+  get_url:
+    url: https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-6.0.zip
+    dest: /opt
+    mode: 0440
+
+- name: install unzip
+  yum:
+    name: unzip
+    state: present
+
+- name: Unarchive a file that is already on the remote machine
+  unarchive:
+    src: /opt/sonarqube-6.0.zip
+    dest: /opt
+    remote_src: yes
+
+- name: copying sonar.properties
+  template: src=sonar.properties dest=/opt/sonarqube-6.0/conf/sonar.properties
+
+- name: Execute the script
+  command: sh /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh start
+
+- name: to make sonar as a service
+  template: src=sonarService dest=/etc/init.d/sonar
+  
+- file:
+    path: /etc/init.d/sonar
+    owner: root
+    group: root
+    mode: 0777
+
+#- name: Execute the command in remote shell; stdout goes to the specified file on the remote.
+#  shell: ln -s /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh /usr/bin/sonar.sh
+
+- file:
+    src: /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh
+    dest: /usr/bin/sonar
+    owner: root
+    group: root
+    state: link
+
+- name: Aadding iptable rule
+  command: iptables -I INPUT 1 -p tcp --dport 9000 -j ACCEPT -m comment --comment "port 9000"
+  command: iptables -I INPUT 1 -p tcp --dport 80 -j ACCEPT
+  command: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 9000
