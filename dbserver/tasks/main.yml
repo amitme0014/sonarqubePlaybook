@@ -48,9 +48,9 @@
 - mysql_user:
     name: "{{mysql_user_sonar}}"
     password: "{{mysql_user_password}}"
-    priv: 'SONARDB.*:ALL'
+    priv: 'sonar.*:ALL'
     state: present 
-    host: 54.69.208.86
+    host: "{{sonar_ip}}"
 
 # name: Create a new database with name sonar
 # mysql_db:

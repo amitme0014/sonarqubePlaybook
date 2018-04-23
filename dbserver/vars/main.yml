@@ -4,4 +4,5 @@
 mysql_user_sonar: sonar
 mysql_user_password: sonar
 
-mysql_db_name: SONARDB
+mysql_db_name: sonar
+sonar_ip: 54.202.0.240
