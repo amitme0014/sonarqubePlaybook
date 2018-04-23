@@ -17,47 +17,25 @@
     name: java-1.8.0-openjdk-devel
     state: present
 
-- name: Download Sonarqube repo
+- name: Download sonar.repo
   get_url:
-    url: https://sonarsource.bintray.com/Distribution/sonarqube/sonarqube-6.0.zip
-    dest: /opt
+    url: http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo
+    dest: /etc/yum.repos.d/sonar.repo
     mode: 0440
 
-- name: install unzip
+- name: installing sonar
   yum:
-    name: unzip
+    name: sonar
     state: present
 
-- name: Unarchive a file that is already on the remote machine
-  unarchive:
-    src: /opt/sonarqube-6.0.zip
-    dest: /opt
-    remote_src: yes
-
-- name: copying sonar.properties
-  template: src=sonar.properties dest=/opt/sonarqube-6.0/conf/sonar.properties
-
-- name: Execute the script
-  command: sh /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh start
-
-- name: to make sonar as a service
-  template: src=sonarService dest=/etc/init.d/sonar
-  
 - file:
     path: /etc/init.d/sonar
     owner: root
     group: root
     mode: 0777
 
-#- name: Execute the command in remote shell; stdout goes to the specified file on the remote.
-#  shell: ln -s /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh /usr/bin/sonar.sh
-
-- file:
-    src: /opt/sonarqube-6.0/bin/linux-x86-64/sonar.sh
-    dest: /usr/bin/sonar
-    owner: root
-    group: root
-    state: link
+- name: Ensure Sonar is running and set to start on boot.
+  service: name=sonar state=started enabled=yes
 
 - name: Aadding iptable rule
   command: iptables -I INPUT 1 -p tcp --dport 9000 -j ACCEPT -m comment --comment "port 9000"
