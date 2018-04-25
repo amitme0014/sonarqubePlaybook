@@ -1,21 +1,22 @@
 ---
 # tasks file for appserver
 
-- name: upgrade all packages
-  yum:
-    name: '*'
-    state: latest
+#- name: upgrade all packages
+#  yum:
+#    name: '*'
+#    state: latest
 
 - name: remove the java-1.7.0 package
   yum:
     name: java-1.7.0-openjdk
     state: absent
-
+  become: yes
 
 - name: Installing the java-1.8.0-openjdk package
   yum:
     name: java-1.8.0-openjdk-devel
     state: present
+  become: yes
 
 - name: Download sonar.repo
   get_url:
@@ -25,19 +26,35 @@
 
 - name: installing sonar
   yum:
-    name: sonar
+    name: sonar-6.2-1
     state: present
+  become: yes 
+
+- name: copying sonar.properties
+  template: src=sonar.properties dest=/opt/sonar/conf/sonar.properties
+  become: yes
 
 - file:
     path: /etc/init.d/sonar
     owner: root
     group: root
     mode: 0777
+  become: yes
 
 - name: Ensure Sonar is running and set to start on boot.
   service: name=sonar state=started enabled=yes
+  become: yes
+
+#- name: Start service sonar, if not running
+#  service:
+#    name: sonar
+#    state: started
+
+#- name: Execute the script
+#  command: sh /opt/sonar/bin/linux-x86-64/sonar.sh start
 
 - name: Aadding iptable rule
+  become: yes
   command: iptables -I INPUT 1 -p tcp --dport 9000 -j ACCEPT -m comment --comment "port 9000"
   command: iptables -I INPUT 1 -p tcp --dport 80 -j ACCEPT
   command: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 9000
